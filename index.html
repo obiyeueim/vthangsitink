@@ -1,1 +1,111 @@
-c
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANANA HUB KEY SYSTEM</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #FFE135; /* Vàng Neon */
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            background: #111;
+            padding: 40px;
+            border: 2px solid #FFE135;
+            box-shadow: 0 0 20px #FFE135;
+            text-align: center;
+            width: 400px;
+            border-radius: 10px;
+        }
+        h1 { margin: 0 0 20px; text-transform: uppercase; text-shadow: 0 0 10px #FFE135; }
+        .key-box {
+            background: #000;
+            border: 1px dashed #555;
+            padding: 15px;
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 20px;
+            word-break: break-all;
+            min-height: 24px;
+        }
+        .btn {
+            background: #FFE135;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            width: 100%;
+        }
+        .btn:hover { background: #fff; box-shadow: 0 0 15px #FFE135; }
+        .progress-bar {
+            height: 5px;
+            background-color: #FFE135;
+            width: 100%;
+            margin-top: 20px;
+            transition: width 0.2s linear;
+        }
+        .timer { font-size: 12px; color: #888; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>BANANA HUB</h1>
+    <p style="color: #fff; font-size: 12px;">HWID: <span id="hwid-display">...</span></p>
+    
+    <div class="key-box" id="key-display">LOADING...</div>
+    
+    <button class="btn" onclick="copyKey()">COPY KEY</button>
+    
+    <div style="width: 100%; background: #333; margin-top: 20px;">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+    <div class="timer">REFRESH IN: <span id="countdown">0.0</span>s</div>
+</div>
+
+<script>
+    // Lấy HWID từ URL
+    const params = new URLSearchParams(window.location.search);
+    const hwid = params.get('hwid') || "UNKNOWN";
+    document.getElementById('hwid-display').innerText = hwid;
+
+    const secret = "BANANAVIP"; // PHẢI GIỐNG FILE VERIFY.JS
+
+    function updateKey() {
+        const currentTime = Date.now();
+        const timeStep = Math.floor(currentTime / 10000); // 10s
+        const raw = hwid + timeStep + secret;
+        
+        // Giả lập Base64 giống server
+        const encoded = btoa(raw);
+        const finalKey = "BNN_" + encoded.substring(0, 12).toUpperCase();
+        
+        document.getElementById('key-display').innerText = finalKey;
+
+        // Xử lý thanh thời gian
+        const timeLeft = 10 - ((currentTime % 10000) / 1000);
+        document.getElementById('countdown').innerText = timeLeft.toFixed(1);
+        document.getElementById('progress').style.width = ((timeLeft / 10) * 100) + "%";
+    }
+
+    setInterval(updateKey, 100); // Chạy liên tục để update thanh thời gian
+
+    function copyKey() {
+        const keyText = document.getElementById('key-display').innerText;
+        navigator.clipboard.writeText(keyText).then(() => {
+            alert("Đã copy Key!");
+        });
+    }
+</script>
+</body>
+</html>
