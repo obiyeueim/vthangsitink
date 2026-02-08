@@ -1,21 +1,162 @@
-// Web JavaScript
-const SECRET = "YAMATE_2024_FIX"; // Chữ này phải giống hệt trong Game
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana Hub | Get Key System</title>
 
-function generateKey() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const hwid = urlParams.get('hwid') || "NOHWID";
-    
-    // Thuật toán tạo mã đơn giản, ổn định
-    let str = hwid + SECRET;
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0; // Chuyển thành số nguyên 32-bit
-    }
-    
-    // Chuyển số thành chuỗi hoa, lấy 8 ký tự cuối cho gọn
-    const finalKey = Math.abs(hash).toString(36).toUpperCase();
-    
-    document.getElementById('keyDisplay').innerText = "YM-" + finalKey;
-    document.getElementById('keyDisplay').style.display = 'block';
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0b0b0b;
+            font-family: 'Inter', sans-serif;
+        }
+        .neon-border {
+            box-shadow: 0 0 18px rgba(250, 204, 21, 0.45);
+            border: 1px solid rgba(250, 204, 21, 0.35);
+        }
+        .title-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .note {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen p-4">
+
+<div class="bg-zinc-900 w-full max-w-md rounded-2xl p-6 neon-border relative overflow-hidden">
+    <div class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-400 rounded-full blur-[90px] opacity-20"></div>
+
+    <div class="relative z-10 text-center">
+        <h1 class="title-font text-2xl font-bold text-yellow-400 tracking-widest mb-2">
+            🍌 BANANA HUB
+        </h1>
+        <p class="text-gray-400 text-xs mb-8 uppercase tracking-tighter">
+            HWID Key Authentication System
+            <br>
+            <span class="note">(HWID = Hardware ID / mã định danh máy)</span>
+        </p>
+
+        <!-- HWID BOX -->
+        <div class="bg-black/50 border border-zinc-700 rounded-xl p-4 mb-6">
+            <p class="text-left text-[10px] text-yellow-400 font-bold uppercase mb-1">
+                Your Device
+                <span class="note">(Thiết bị của bạn)</span>
+            </p>
+            <div id="hwid-box" class="text-gray-300 font-mono text-sm break-all">
+                Scanning HWID...
+            </div>
+        </div>
+
+        <!-- STEP 1 -->
+        <div id="step-1">
+            <button onclick="startGetKey()"
+                class="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-4 rounded-xl transition-all transform active:scale-95 shadow-lg shadow-yellow-900/40">
+                GET KEY (FREE)
+            </button>
+            <p class="text-gray-500 text-[11px] mt-4">
+                Key is bound to your HWID
+                <br>
+                <span class="note">(Key chỉ dùng cho thiết bị này · Expires in 6 hours / hết hạn sau 6 giờ)</span>
+            </p>
+        </div>
+
+        <!-- STEP 2 -->
+        <div id="step-2" class="hidden">
+            <div class="bg-yellow-400/10 border border-yellow-400/30 rounded-xl p-4 mb-4">
+                <p class="text-yellow-400 text-sm font-bold mb-2">
+                    YOUR KEY
+                    <span class="note">(Key của bạn)</span>
+                </p>
+
+                <input type="text" id="final-key" readonly
+                    class="w-full bg-black/40 text-center text-yellow-400 font-mono py-2 rounded border border-yellow-900 mb-3">
+
+                <button onclick="copyKey()"
+                    class="text-xs bg-yellow-400 text-black px-4 py-1 rounded-full hover:bg-yellow-300">
+                    COPY KEY
+                    <span class="note">(Sao chép)</span>
+                </button>
+            </div>
+
+            <p class="text-gray-400 text-xs text-center">
+                Go back to Roblox and paste the key to continue
+                <br>
+                <span class="note">(Quay lại Roblox và dán key)</span>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+/* =============================
+   1. GET HWID FROM ROBLOX LINK
+   (Lấy HWID từ link Roblox)
+============================= */
+const params = new URLSearchParams(window.location.search);
+const userHWID = params.get("hwid");
+const hwidBox = document.getElementById("hwid-box");
+
+if (userHWID) {
+    hwidBox.innerText = userHWID;
+} else {
+    hwidBox.innerHTML =
+        "<span class='text-red-500'>HWID not found. Please open this link from Roblox.</span>" +
+        "<br><span class='note'>(Không tìm thấy HWID, hãy mở link từ Roblox)</span>";
+    const btn = document.querySelector("#step-1 button");
+    btn.disabled = true;
+    btn.classList.add("opacity-50", "cursor-not-allowed");
 }
+
+/* =============================
+   2. CALL API TO GENERATE KEY
+   (Gọi API tạo key)
+============================= */
+function startGetKey() {
+    const btn = document.querySelector("#step-1 button");
+    btn.innerText = "GENERATING KEY...";
+    btn.disabled = true;
+
+    fetch("/api/getkey", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hwid: userHWID })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.key) {
+            alert("Failed to generate key!");
+            return;
+        }
+
+        document.getElementById("step-1").classList.add("hidden");
+        document.getElementById("step-2").classList.remove("hidden");
+        document.getElementById("final-key").value = data.key;
+    })
+    .catch(() => {
+        alert("Cannot connect to server!");
+    });
+}
+
+/* =============================
+   3. COPY KEY
+   (Sao chép key)
+============================= */
+function copyKey() {
+    const input = document.getElementById("final-key");
+    input.select();
+    document.execCommand("copy");
+    alert("Key copied successfully!");
+}
+</script>
+
+</body>
+</html>
