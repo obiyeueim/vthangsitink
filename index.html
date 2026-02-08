@@ -3,63 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banana Hub | Key System 30s</title>
+    <title>Banana Hub | Real-time Key</title>
     <style>
         :root { --main-color: #FFD700; --bg-dark: #0a0a0a; --card-bg: #151515; }
         body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: var(--card-bg); border: 1px solid rgba(255, 215, 0, 0.2); padding: 30px; border-radius: 24px; text-align: center; width: 350px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .logo { font-size: 50px; margin-bottom: 10px; animation: bounce 2s infinite; }
-        h1 { color: var(--main-color); margin: 0; font-size: 24px; letter-spacing: 2px; }
-        .hwid-tag { background: #222; font-size: 10px; color: #777; padding: 5px 10px; border-radius: 20px; margin: 15px 0; display: inline-block; }
-        .key-container { background: #000; border: 1px solid #333; padding: 20px; border-radius: 16px; margin: 20px 0; min-height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        #key-val { font-size: 22px; font-weight: bold; color: white; display: none; }
-        .loader { width: 30px; height: 30px; border: 3px solid #333; border-top: 3px solid var(--main-color); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        .btn-copy { background: var(--main-color); color: black; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; display: none; }
-        #timer { font-size: 12px; color: #ff4444; margin-top: 15px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .card { background: var(--card-bg); border: 1px solid rgba(255, 215, 0, 0.2); padding: 30px; border-radius: 24px; text-align: center; width: 350px; }
+        .logo { font-size: 50px; margin-bottom: 10px; }
+        h1 { color: var(--main-color); margin: 0; font-size: 24px; }
+        .key-container { background: #000; border: 1px solid #333; padding: 20px; border-radius: 16px; margin: 20px 0; min-height: 60px; }
+        #key-val { font-size: 22px; font-weight: bold; color: white; word-break: break-all; }
+        .btn-copy { background: var(--main-color); color: black; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; }
+        #timer { font-size: 13px; color: #ff4444; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="card">
         <div class="logo">🍌</div>
         <h1>BANANA HUB</h1>
-        <div class="hwid-tag">ID: <span id="hwid-display">...</span></div>
+        <p style="font-size: 10px; color: #555;">Mỗi 30 giây sẽ đổi Key mới</p>
         <div class="key-container">
-            <div id="loading-area"><div class="loader"></div><div style="margin-top:10px; font-size:12px; color:var(--main-color)">Đang tạo mã...</div></div>
-            <div id="key-val"></div>
+            <div id="key-val">ĐANG TẠO...</div>
         </div>
-        <button class="btn-copy" id="copy-btn" onclick="copyKey()">SAO CHÉP MÃ</button>
+        <button class="btn-copy" onclick="copyKey()">SAO CHÉP MÃ</button>
         <div id="timer">Đang đồng bộ...</div>
     </div>
+
     <script>
         const urlParams = new URLSearchParams(window.location.search);
+        // Thêm dấu vân tay thời gian để chống cache trình duyệt
         let hwid = (urlParams.get('hwid') || "UNKNOWN").trim();
-        document.getElementById('hwid-display').innerText = hwid;
 
         function updateKey() {
             const now = Date.now();
-            const timeStep = Math.floor(now / 30000); // 30 GIÂY
+            // CHU KỲ 30 GIÂY
+            const timeStep = Math.floor(now / 30000); 
             const secret = "BANANAVIP";
+            
+            // Tạo mã dựa trên khung thời gian hiện tại
             const generatedKey = "BNN_" + btoa(hwid + timeStep + secret).substring(0, 12).toUpperCase();
-            document.getElementById('key-val').innerText = generatedKey;
+            
+            // Cập nhật lên màn hình
+            const keyElement = document.getElementById('key-val');
+            if (keyElement.innerText !== generatedKey) {
+                keyElement.innerText = generatedKey;
+                // Hiệu ứng nháy xanh khi đổi key mới cho chuyên nghiệp
+                keyElement.style.color = "#00ff00";
+                setTimeout(() => { keyElement.style.color = "white"; }, 500);
+            }
+            
             const secondsLeft = 30 - Math.floor((now % 30000) / 1000);
-            document.getElementById('timer').innerText = "Mã sẽ đổi sau: " + secondsLeft + " giây";
+            document.getElementById('timer').innerText = "KEY MỚI SAU: " + secondsLeft + " GIÂY";
         }
 
-        setTimeout(() => {
-            document.getElementById('loading-area').style.display = 'none';
-            document.getElementById('key-val').style.display = 'block';
-            document.getElementById('copy-btn').style.display = 'block';
-            updateKey();
-            setInterval(updateKey, 1000);
-        }, 2000);
+        // Chạy ngay lập tức và lặp lại mỗi giây
+        updateKey();
+        setInterval(updateKey, 1000);
 
         function copyKey() {
-            navigator.clipboard.writeText(document.getElementById('key-val').innerText);
-            const btn = document.getElementById('copy-btn');
-            btn.innerText = "✅ ĐÃ CHÉP";
-            setTimeout(() => { btn.innerText = "SAO CHÉP MÃ"; }, 2000);
+            const key = document.getElementById('key-val').innerText;
+            navigator.clipboard.writeText(key);
+            alert("Đã copy mã hiện tại!");
         }
     </script>
 </body>
