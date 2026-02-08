@@ -1,41 +1,32 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Banana Hub | Test 1 Phút</title>
-    <style>
-        body { background-color: #0b0b0b; color: #FFD700; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { border: 2px solid #FFD700; padding: 40px; border-radius: 20px; text-align: center; background: #111; box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); width: 350px; }
-        .key-display { background: #222; padding: 15px; border-radius: 10px; font-size: 20px; font-weight: bold; color: #fff; border: 1px solid #FFD700; margin: 20px 0; cursor: pointer; }
-        .btn-copy { background: #FFD700; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; }
-        #status { font-size: 14px; margin-top: 15px; color: #ff0000; }
-        .hwid { font-size: 10px; color: #555; word-break: break-all; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>🍌 BANANA HUB</h1>
-        <p style="color: #00ff00;">CHẾ ĐỘ TEST: KEY 1 PHÚT</p>
-        <div class="hwid">ID: <span id="hwid-val">...</span></div>
-        <div class="key-display" id="key-val" onclick="copyKey()">ĐANG TẠO...</div>
-        <button class="btn-copy" onclick="copyKey()">SAO CHÉP KEY</button>
-        <p id="status">Lấy xong dán ngay, 1 phút là hết hạn!</p>
-    </div>
-    <script>
+<div class="card">
+    <h1>🍌 BANANA HUB</h1>
+    <p id="timer" style="color: #ff4444; font-weight: bold;"></p>
+    <div class="key-display" id="key-val" onclick="copyKey()">ĐANG TẠO...</div>
+    <button class="btn-copy" onclick="copyKey()">SAO CHÉP</button>
+</div>
+
+<script>
+    function updateKey() {
         const urlParams = new URLSearchParams(window.location.search);
         let hwid = (urlParams.get('hwid') || "UNKNOWN").trim();
-        document.getElementById('hwid-val').innerText = hwid;
-
-        // THUẬT TOÁN 1 PHÚT ĐỂ TEST
-        const timeStep = Math.floor(Date.now() / (1000 * 60)); 
+        
+        const now = Date.now();
+        const timeStep = Math.floor(now / 60000);
         const secret = "BANANAVIP";
         const generatedKey = "BNN_" + btoa(hwid + timeStep + secret).substring(0, 12).toUpperCase();
+        
         document.getElementById('key-val').innerText = generatedKey;
+        
+        // Tính giây còn lại của phút này
+        const secondsLeft = 60 - Math.floor((now % 60000) / 1000);
+        document.getElementById('timer').innerText = "Key sẽ đổi sau: " + secondsLeft + " giây";
+    }
 
-        function copyKey() {
-            navigator.clipboard.writeText(generatedKey);
-            alert("Đã copy key test!");
-        }
-    </script>
-</body>
-</html>
+    setInterval(updateKey, 1000);
+    updateKey();
+
+    function copyKey() {
+        navigator.clipboard.writeText(document.getElementById('key-val').innerText);
+        alert("Đã copy!");
+    }
+</script>
