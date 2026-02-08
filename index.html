@@ -1,52 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANANA HUB - KEY SYSTEM</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #FFE135; /* Vàng Neon */
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            background: #111;
+            padding: 40px;
+            border: 2px solid #FFE135;
+            box-shadow: 0 0 20px #FFE135;
+            text-align: center;
+            width: 400px;
+            border-radius: 10px;
+            position: relative;
+        }
+        h1 { margin: 0 0 20px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px #FFE135; }
+        .key-box {
+            background: #000;
+            border: 1px dashed #555;
+            padding: 15px;
+            font-size: 18px;
+            color: #fff;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }
+        .btn {
+            background: #FFE135;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+            width: 100%;
+        }
+        .btn:hover { background: #fff; box-shadow: 0 0 15px #FFE135; }
+        .progress-container {
+            width: 100%;
+            background-color: #333;
+            height: 5px;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            height: 5px;
+            background-color: #FFE135;
+            width: 100%;
+            transition: width 0.2s linear;
+        }
+        .timer { font-size: 12px; color: #888; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>BANANA HUB</h1>
+    <p style="color: #fff; font-size: 12px;">HWID: <span id="hwid-display">DETECTING...</span></p>
+    
+    <div class="key-box" id="key-display">LOADING KEY...</div>
+    
+    <button class="btn" onclick="copyKey()">COPY KEY</button>
+    
+    <div class="progress-container">
+        <div class="progress-bar" id="progress"></div>
+    </div>
+    <div class="timer">REFRESH IN: <span id="countdown">0.0</span>s</div>
+</div>
+
 <script>
-    const hwid = new URLSearchParams(window.location.search).get('hwid') || "UNKNOWN";
+    // Lấy HWID từ URL (?hwid=xxx)
+    const params = new URLSearchParams(window.location.search);
+    const hwid = params.get('hwid') || "UNKNOWN_HWID";
+    document.getElementById('hwid-display').innerText = hwid;
+
+    // Cấu hình giống Backend
     const secret = "BANANAVIP";
+    
+    function generateKey() {
+        const currentTime = Date.now();
+        const timeStep = Math.floor(currentTime / 10000); // 10s cycle
+        const raw = hwid + timeStep + secret;
+        
+        // Base64 Encode
+        const encoded = btoa(raw);
+        const finalKey = "BNN_" + encoded.substring(0, 12).toUpperCase();
+        
+        document.getElementById('key-display').innerText = finalKey;
 
-    function refresh() {
-        const now = Date.now();
+        // Xử lý Progress Bar
+        const timeLeft = 10 - ((currentTime % 10000) / 1000);
+        document.getElementById('countdown').innerText = timeLeft.toFixed(1);
         
-        // CHU KỲ 10 GIÂY: Ép số nguyên tuyệt đối từ giây thực tế
-        const step = Math.floor(now / 10000); 
-        
-        // TẠO MÃ: Kết hợp HWID + Bước thời gian + Secret
-        // Thêm step.toString() để đảm bảo nội dung thay đổi mỗi 10s
-        const rawString = hwid.trim() + step.toString() + secret;
-        const newKey = "BNN_" + btoa(rawString).substring(0, 12).toUpperCase();
-        
-        const keyDisplay = document.getElementById('key-display');
-        const timerDisplay = document.getElementById('timer');
-        const progress = document.getElementById('progress');
-
-        // KIỂM TRA VÀ CẬP NHẬT (Cưỡng chế ghi đè)
-        if (keyDisplay.innerText !== newKey) {
-            keyDisplay.innerText = newKey;
-            
-            // Hiệu ứng nháy màu báo hiệu mã đã đổi
-            keyDisplay.style.color = "#00ff00";
-            setTimeout(() => { keyDisplay.style.color = "#ffffff"; }, 500);
-            console.log("Mã mới đã nhảy: ", newKey);
-        }
-
-        // Đếm ngược từ 10 về 1
-        const left = 10 - Math.floor((now % 10000) / 1000);
-        timerDisplay.innerText = "REFRESH IN: " + left + "S";
-        
-        // Thanh progress chạy mượt theo thời gian thực
-        if (progress) {
-            progress.style.width = (left / 10) * 100 + "%";
-        }
+        const percentage = (timeLeft / 10) * 100;
+        document.getElementById('progress').style.width = percentage + "%";
     }
 
-    // Chạy kiểm tra liên tục mỗi 0.5 giây để không bỏ lỡ khoảnh khắc đổi mã
-    setInterval(refresh, 500);
-    refresh();
+    // Chạy loop 200ms
+    setInterval(generateKey, 200);
 
-    function copy() {
-        const text = document.getElementById('key-display').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.getElementById('copy-btn');
-            btn.innerText = "✅ COPIED!";
-            setTimeout(() => { btn.innerText = "COPY ACCESS KEY"; }, 1000);
+    function copyKey() {
+        const keyText = document.getElementById('key-display').innerText;
+        navigator.clipboard.writeText(keyText).then(() => {
+            const btn = document.querySelector('.btn');
+            btn.innerText = "COPIED!";
+            setTimeout(() => btn.innerText = "COPY KEY", 1000);
         });
     }
 </script>
+</body>
+</html>
