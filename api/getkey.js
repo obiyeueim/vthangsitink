@@ -1,16 +1,12 @@
-import crypto from "crypto"
-
-const SECRET = "YAMATE_SIX_SECRET"
-
 export default function handler(req, res) {
-  const { hwid } = req.body
-  if (!hwid) return res.status(400).json({})
+  try {
+    const { hwid } = req.body
+    if (!hwid) return res.status(400).json({})
 
-  const key = crypto.createHash("sha256")
-    .update(hwid + SECRET)
-    .digest("hex")
-    .slice(0, 32)
-    .toUpperCase()
+    const key = "BANANA-" + Buffer.from(hwid).toString("base64").slice(0, 12).toUpperCase()
 
-  res.json({ key })
+    res.status(200).json({ key })
+  } catch (e) {
+    res.status(500).json({ error: "SERVER_ERROR" })
+  }
 }
