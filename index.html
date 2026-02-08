@@ -132,3 +132,53 @@
     </script>
 </body>
 </html>
+
+<script>
+    const hwid = new URLSearchParams(window.location.search).get('hwid') || "UNKNOWN";
+    const secret = "BANANAVIP";
+
+    function update() {
+        const now = Date.now();
+        // Ép kiểu số nguyên cho chắc chắn
+        const timeStep = Math.floor(now / 10000); 
+        
+        // Tạo Key mới
+        const raw = hwid.trim() + timeStep + secret;
+        const newKey = "BNN_" + btoa(raw).substring(0, 12).toUpperCase();
+        
+        // Cập nhật giao diện (Ép cập nhật liên tục)
+        const display = document.getElementById('key-display');
+        
+        // Hiệu ứng nháy nhẹ khi sang chu kỳ mới (giây thứ 10)
+        const left = 10 - Math.floor((now % 10000) / 1000);
+        
+        if (left === 10 || left === 0) {
+            display.style.color = "#00ff00";
+        } else {
+            display.style.color = "#ffffff";
+        }
+
+        display.innerText = newKey;
+        document.getElementById('timer').innerText = "SYSTEM REFRESH IN: " + left + "S";
+        
+        // Thanh progress chạy mượt
+        const percent = (left / 10) * 100;
+        document.getElementById('progress-inner').style.width = percent + "%";
+    }
+
+    // Chạy 500ms một lần cho nó nhạy, không đợi 1s nữa
+    setInterval(update, 500);
+    update();
+
+    function copyKey() {
+        const key = document.getElementById('key-display').innerText;
+        navigator.clipboard.writeText(key).then(() => {
+            const btn = document.getElementById('copy-btn');
+            btn.innerText = "✅ COPIED!";
+            setTimeout(() => {
+                btn.innerText = "Copy Access Key";
+            }, 1000);
+        });
+    }
+</script>
+
