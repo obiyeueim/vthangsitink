@@ -1,42 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Banana Hub | 10s Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana Hub | Premium Key System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { background: #0a0a0a; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #121212; border: 2px solid #FFD700; padding: 30px; border-radius: 20px; text-align: center; width: 320px; }
-        #key-display { font-size: 24px; font-weight: bold; color: #FFD700; display: block; margin: 20px 0; transition: 0.2s; }
-        .btn { background: #FFD700; color: black; border: none; padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; width: 100%; }
-        #timer { color: #ff4444; font-size: 14px; margin-top: 15px; font-weight: bold; }
+        :root { --main: #FFD700; --bg: #050505; --card: rgba(20, 20, 20, 0.8); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: var(--bg);
+            background-image: radial-gradient(circle at center, #1a1a00 0%, #050505 100%);
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .card { 
+            background: var(--card);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            padding: 40px; border-radius: 30px; 
+            text-align: center; width: 380px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(255, 215, 0, 0.05);
+            position: relative;
+        }
+
+        .card::before {
+            content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, transparent, var(--main), transparent);
+            border-radius: 30px; z-index: -1; opacity: 0.3;
+        }
+
+        .logo-container { margin-bottom: 20px; }
+        .logo { font-size: 60px; filter: drop-shadow(0 0 15px var(--main)); animation: float 3s ease-in-out infinite; }
+        
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 22px; color: var(--main); letter-spacing: 4px; margin-bottom: 5px; text-transform: uppercase; }
+        .status { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 25px; }
+
+        .key-display-box { 
+            background: rgba(0,0,0,0.6); 
+            border: 1px solid #222; 
+            padding: 20px; border-radius: 15px; 
+            margin-bottom: 25px; position: relative;
+            overflow: hidden;
+        }
+
+        #key-display { 
+            font-family: 'Orbitron', sans-serif; font-size: 18px; 
+            font-weight: 700; color: #fff; letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+
+        .btn-copy { 
+            background: var(--main); color: #000; border: none; 
+            width: 100%; padding: 15px; border-radius: 12px; 
+            font-weight: 800; cursor: pointer; font-size: 14px;
+            text-transform: uppercase; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .btn-copy:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 215, 0, 0.3); background: #fff; }
+        .btn-copy:active { transform: scale(0.95); }
+
+        #timer { font-family: 'Orbitron', sans-serif; font-size: 12px; color: #ff4444; margin-top: 20px; font-weight: bold; }
+
+        .progress-bar { 
+            width: 100%; height: 3px; background: #111; 
+            margin-top: 10px; border-radius: 5px; overflow: hidden; 
+        }
+        #progress-inner { width: 100%; height: 100%; background: var(--main); transition: width 1s linear; }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
+
     <div class="card">
-        <h1>🍌 BANANA</h1>
-        <div id="key-display">ĐANG TẠO...</div>
-        <button class="btn" onclick="copyKey()">COPY KEY</button>
-        <div id="timer">---</div>
+        <div class="logo-container"><div class="logo">🍌</div></div>
+        <h1>BANANA HUB</h1>
+        <div class="status">Security Level: Maximum</div>
+
+        <div class="key-display-box">
+            <div id="key-display">GENERATING...</div>
+            <div class="progress-bar"><div id="progress-inner"></div></div>
+        </div>
+
+        <button class="btn-copy" id="copy-btn" onclick="copyKey()">Copy Access Key</button>
+        <div id="timer">--s</div>
     </div>
+
     <script>
         const hwid = new URLSearchParams(window.location.search).get('hwid') || "UNKNOWN";
+        
         function update() {
             const now = Date.now();
             const timeStep = Math.floor(now / 10000); // 10 GIÂY
-            const key = "BNN_" + btoa(hwid + timeStep + "BANANAVIP").substring(0, 12).toUpperCase();
+            const secret = "BANANAVIP";
+            const key = "BNN_" + btoa(hwid + timeStep + secret).substring(0, 12).toUpperCase();
+            
             const el = document.getElementById('key-display');
             if(el.innerText !== key) {
                 el.innerText = key;
-                el.style.transform = "scale(1.1)";
-                setTimeout(() => el.style.transform = "scale(1)", 200);
+                el.style.color = "#00ff00";
+                setTimeout(() => el.style.color = "#fff", 500);
             }
+
             const left = 10 - Math.floor((now % 10000) / 1000);
-            document.getElementById('timer').innerText = "ĐỔI MÃ SAU: " + left + "s";
+            document.getElementById('timer').innerText = "SYSTEM REFRESH IN: " + left + "S";
+            
+            // Cập nhật thanh tiến trình
+            const percent = (left / 10) * 100;
+            document.getElementById('progress-inner').style.width = percent + "%";
         }
-        setInterval(update, 1000); update();
+
+        setInterval(update, 1000);
+        update();
+
         function copyKey() {
-            navigator.clipboard.writeText(document.getElementById('key-display').innerText);
-            alert("Đã Copy!");
+            const key = document.getElementById('key-display').innerText;
+            navigator.clipboard.writeText(key).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.innerText = "✅ COPIED TO CLIPBOARD";
+                btn.style.background = "#00ff00";
+                setTimeout(() => {
+                    btn.innerText = "Copy Access Key";
+                    btn.style.background = "#FFD700";
+                }, 1500);
+            });
         }
     </script>
 </body>
