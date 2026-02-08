@@ -1,32 +1,112 @@
-<div class="card">
-    <h1>🍌 BANANA HUB</h1>
-    <p id="timer" style="color: #ff4444; font-weight: bold;"></p>
-    <div class="key-display" id="key-val" onclick="copyKey()">ĐANG TẠO...</div>
-    <button class="btn-copy" onclick="copyKey()">SAO CHÉP</button>
-</div>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banana Hub | Key System</title>
+    <style>
+        :root { --main-color: #FFD700; --bg-dark: #0a0a0a; --card-bg: #151515; }
+        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        
+        /* Hiệu ứng nền mờ */
+        body::before { content: ""; position: absolute; width: 300px; height: 300px; background: var(--main-color); filter: blur(150px); opacity: 0.1; z-index: -1; }
 
-<script>
-    function updateKey() {
+        .card { background: var(--card-bg); border: 1px solid rgba(255, 215, 0, 0.2); padding: 30px; border-radius: 24px; text-align: center; width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative; }
+        
+        .logo { font-size: 50px; margin-bottom: 10px; display: inline-block; animation: bounce 2s infinite; }
+        h1 { color: var(--main-color); margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase; }
+        .hwid-tag { background: #222; font-size: 10px; color: #777; padding: 5px 10px; border-radius: 20px; margin: 15px 0; display: inline-block; border: 1px solid #333; }
+
+        /* Key Box */
+        .key-container { background: #000; border: 1px solid #333; padding: 20px; border-radius: 16px; margin: 20px 0; min-height: 60px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        #key-val { font-size: 22px; font-weight: bold; color: white; letter-spacing: 1px; display: none; }
+        
+        /* Hiệu ứng Loading */
+        .loader { width: 40px; height: 40px; border: 3px solid #333; border-top: 3px solid var(--main-color); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .loading-text { font-size: 14px; color: var(--main-color); margin-top: 10px; }
+
+        /* Button */
+        .btn-copy { background: var(--main-color); color: black; border: none; width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; margin-top: 10px; display: none; }
+        .btn-copy:hover { background: white; transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255, 215, 0, 0.2); }
+
+        #timer { font-size: 12px; color: #ff4444; margin-top: 15px; opacity: 0.8; }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* Success Checkmark */
+        .check-icon { color: #00ff00; font-size: 40px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="logo">🍌</div>
+        <h1>BANANA HUB</h1>
+        <div class="hwid-tag">ID: <span id="hwid-val-display">...</span></div>
+
+        <div class="key-container">
+            <div id="loading-area">
+                <div class="loader"></div>
+                <div class="loading-text">Đang tạo mã bảo mật...</div>
+            </div>
+            <div id="key-val">BNN_LOADING...</div>
+        </div>
+
+        <button class="btn-copy" id="copy-btn" onclick="copyKey()">SAO CHÉP MÃ</button>
+        <div id="timer">Đang kiểm tra thời gian server...</div>
+    </div>
+
+    <script>
         const urlParams = new URLSearchParams(window.location.search);
         let hwid = (urlParams.get('hwid') || "UNKNOWN").trim();
-        
-        const now = Date.now();
-        const timeStep = Math.floor(now / 60000);
-        const secret = "BANANAVIP";
-        const generatedKey = "BNN_" + btoa(hwid + timeStep + secret).substring(0, 12).toUpperCase();
-        
-        document.getElementById('key-val').innerText = generatedKey;
-        
-        // Tính giây còn lại của phút này
-        const secondsLeft = 60 - Math.floor((now % 60000) / 1000);
-        document.getElementById('timer').innerText = "Key sẽ đổi sau: " + secondsLeft + " giây";
-    }
+        document.getElementById('hwid-val-display').innerText = hwid;
 
-    setInterval(updateKey, 1000);
-    updateKey();
+        function generate() {
+            // Giả lập thời gian chờ 2 giây cho chuyên nghiệp
+            setTimeout(() => {
+                document.getElementById('loading-area').style.display = 'none';
+                document.getElementById('key-val').style.display = 'block';
+                document.getElementById('copy-btn').style.display = 'block';
+                
+                updateKey();
+            }, 2000);
+        }
 
-    function copyKey() {
-        navigator.clipboard.writeText(document.getElementById('key-val').innerText);
-        alert("Đã copy!");
-    }
-</script>
+        function updateKey() {
+            const now = Date.now();
+            const timeStep = Math.floor(now / 60000); // 1 phút (Đổi lại 6h khi chạy thật)
+            const secret = "BANANAVIP";
+            const generatedKey = "BNN_" + btoa(hwid + timeStep + secret).substring(0, 12).toUpperCase();
+            
+            document.getElementById('key-val').innerText = generatedKey;
+            
+            const secondsLeft = 60 - Math.floor((now % 60000) / 1000);
+            document.getElementById('timer').innerText = "Mã sẽ hết hạn sau: " + secondsLeft + " giây";
+        }
+
+        // Cập nhật đồng hồ mỗi giây
+        setInterval(() => {
+            if(document.getElementById('key-val').style.display === 'block') {
+                updateKey();
+            }
+        }, 1000);
+
+        function copyKey() {
+            const key = document.getElementById('key-val').innerText;
+            navigator.clipboard.writeText(key);
+            
+            const btn = document.getElementById('copy-btn');
+            btn.innerText = "✅ ĐÃ SAO CHÉP";
+            btn.style.background = "#00ff00";
+            
+            setTimeout(() => {
+                btn.innerText = "SAO CHÉP MÃ";
+                btn.style.background = "#FFD700";
+            }, 2000);
+        }
+
+        generate();
+    </script>
+</body>
+</html>
