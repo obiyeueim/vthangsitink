@@ -1,21 +1,23 @@
 import crypto from "crypto"
 
-const SECRET = "YAMATE_SIX_SECRET"
+const SECRET = "BANANA_HUB_SECRET"
 
 export default function handler(req, res) {
-  try {
-    const { hwid, key } = req.query
-    if (!hwid || !key) return res.json({ success: false })
-
-    const realKey = crypto
-      .createHash("sha256")
-      .update(hwid + SECRET)
-      .digest("hex")
-      .slice(0, 32)
-      .toUpperCase()
-
-    res.json({ success: key === realKey })
-  } catch (e) {
-    res.status(500).json({ success: false })
+  const { hwid, key, expireAt } = req.query
+  if (!hwid || !key || !expireAt) {
+    return res.json({ success: false, reason: "MISSING_DATA" })
   }
+
+  if (Date.now() > Number(expireAt)) {
+    return res.json({ success: false, reason: "EXPIRED" })
+  }
+
+  const raw = hwid + "|" + expireAt + "|" + SECRET
+  const realKey = crypto.createHash("sha256")
+    .update(raw)
+    .digest("hex")
+    .slice(0, 32)
+    .toUpperCase()
+
+  res.json({ success: key === realKey })
 }
