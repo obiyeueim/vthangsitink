@@ -3,9 +3,10 @@ export default function handler(req, res) {
     const { hwid, key } = req.query;
     if (!hwid || !key) return res.status(200).send("invalid");
 
-    const hours6 = Math.floor(Date.now() / (1000 * 60 * 60 * 6));
+    // THUẬT TOÁN 1 PHÚT ĐỂ TEST (Phải khớp với index.html)
+    const timeStep = Math.floor(Date.now() / (1000 * 60));
     const secret = "BANANAVIP";
-    const expectedKey = "BNN_" + Buffer.from(hwid.trim() + hours6 + secret).toString('base64').substring(0, 12).toUpperCase();
+    const expectedKey = "BNN_" + Buffer.from(hwid.trim() + timeStep + secret).toString('base64').substring(0, 12).toUpperCase();
 
     if (key.trim() === expectedKey) {
         res.status(200).send("valid");
