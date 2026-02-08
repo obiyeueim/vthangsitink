@@ -1,21 +1,13 @@
 export default function handler(req, res) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
     const { hwid, key } = req.query;
+    if (!hwid || !key) return res.status(200).send("invalid");
 
-    if (!hwid || !key) {
-        return res.status(200).send("invalid");
-    }
-
-    const cleanHwid = hwid.trim();
-    const cleanKey = key.trim();
-
-    // Thuật toán 6 giờ (Phải y hệt index.html)
     const hours6 = Math.floor(Date.now() / (1000 * 60 * 60 * 6));
     const secret = "BANANAVIP";
-    
-    // Tạo key mong đợi từ HWID gửi lên
-    const expectedKey = "BNN_" + Buffer.from(cleanHwid + hours6 + secret).toString('base64').substring(0, 12).toUpperCase();
+    const expectedKey = "BNN_" + Buffer.from(hwid.trim() + hours6 + secret).toString('base64').substring(0, 12).toUpperCase();
 
-    if (cleanKey === expectedKey) {
+    if (key.trim() === expectedKey) {
         res.status(200).send("valid");
     } else {
         res.status(200).send("invalid");
