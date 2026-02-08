@@ -3,18 +3,11 @@ import crypto from "crypto"
 const SECRET = "BANANA_HUB_SECRET"
 
 export default function handler(req, res) {
-  const { hwid, key, expireAt } = req.query
-  if (!hwid || !key || !expireAt) {
-    return res.json({ success: false, reason: "MISSING_DATA" })
-  }
+  const { hwid, key } = req.query
+  if (!hwid || !key) return res.json({ success: false })
 
-  if (Date.now() > Number(expireAt)) {
-    return res.json({ success: false, reason: "EXPIRED" })
-  }
-
-  const raw = hwid + "|" + expireAt + "|" + SECRET
   const realKey = crypto.createHash("sha256")
-    .update(raw)
+    .update(hwid + SECRET)
     .digest("hex")
     .slice(0, 32)
     .toUpperCase()
