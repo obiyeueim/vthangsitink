@@ -2,16 +2,14 @@
 export default function handler(req, res) {
     const { hwid, key } = req.query;
 
-    // KEY THẬT CỦA BẠN (Bạn có thể đổi hoặc kết nối Database ở đây)
-    const SECRET_KEY = "BANANA_FREE_2026"; 
+    if (!hwid || !key) return res.status(400).send("missing");
 
-    if (!hwid || !key) {
-        return res.status(400).send("missing_info");
-    }
+    // Thuật toán tạo Key phải Y HỆT bên trang index.html
+    const expectedKey = "BANANA_" + Buffer.from(hwid).toString('base64').substring(0, 8).toUpperCase();
 
-    if (key === SECRET_KEY) {
-        return res.status(200).send("valid");
+    if (key === expectedKey) {
+        res.status(200).send("valid");
     } else {
-        return res.status(200).send("invalid");
+        res.status(200).send("invalid");
     }
 }
