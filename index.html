@@ -1,0 +1,21 @@
+// Web JavaScript
+const SECRET = "YAMATE_2024_FIX"; // Chữ này phải giống hệt trong Game
+
+function generateKey() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hwid = urlParams.get('hwid') || "NOHWID";
+    
+    // Thuật toán tạo mã đơn giản, ổn định
+    let str = hwid + SECRET;
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0; // Chuyển thành số nguyên 32-bit
+    }
+    
+    // Chuyển số thành chuỗi hoa, lấy 8 ký tự cuối cho gọn
+    const finalKey = Math.abs(hash).toString(36).toUpperCase();
+    
+    document.getElementById('keyDisplay').innerText = "YM-" + finalKey;
+    document.getElementById('keyDisplay').style.display = 'block';
+}
