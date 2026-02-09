@@ -3,53 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BANANA HUB - AUTO RESET</title>
+    <title>BANANA HUB - KEY REGENERATOR</title>
     <style>
-        body { margin:0; background:#111; color:#FFE135; font-family: sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
-        .box { background:#000; padding:30px; border:3px solid #FFE135; border-radius:20px; text-align:center; width:350px; box-shadow:0 0 30px #FFE135; }
-        .meme-img { width: 100px; margin-bottom: 10px; animation: bounce 2s infinite; }
-        .key { font-size:24px; font-weight:bold; color:#fff; background:#222; padding:15px; margin:20px 0; border-radius:10px; border:1px dashed #FFE135; }
-        button { background:#FFE135; border:none; padding:15px; width:100%; font-weight:bold; cursor:pointer; border-radius:10px; text-transform:uppercase; }
+        body { margin:0; background:#0a0a0a; color:#FFE135; font-family: 'Segoe UI', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
+        .box { background:#111; padding:40px; border:3px solid #FFE135; border-radius:25px; text-align:center; width:360px; box-shadow:0 0 40px rgba(255,225,53,0.2); }
+        .key { font-size:28px; font-weight:bold; color:#fff; background:#000; padding:20px; margin:20px 0; border-radius:15px; border:2px dashed #FFE135; letter-spacing: 2px; }
+        button { background:#FFE135; border:none; padding:15px; width:100%; font-weight:900; cursor:pointer; border-radius:12px; font-size:16px; transition: 0.3s; }
+        button:hover { background:#fff; transform: scale(1.02); }
+        .timer { margin-top:20px; font-size:14px; color:#666; }
         #countdown { color:#ff4444; font-weight:bold; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
     </style>
 </head>
 <body>
     <div class="box">
-        <img src="https://media.tenor.com/2Xy40aH9yG4AAAAi/banana-cat-crying.gif" class="meme-img">
-        <h2>🍌 BANANA HUB</h2>
-        <div style="font-size: 11px; color:#888;">HWID: <span id="hwid-show">...</span></div>
+        <h2 style="margin:0;">🍌 BANANA CAT</h2>
+        <p style="font-size:10px; color:#444;">DEVICE SECURED SYSTEM</p>
+        
         <div id="key-display" class="key">LOADING...</div>
+        
         <button onclick="copyKey()">COPY KEY</button>
-        <div style="margin-top:15px; font-size:14px;">Trang web sẽ tự Reset sau: <span id="countdown">10</span>s</div>
+        
+        <div class="timer">
+            Hệ thống sẽ Reset mã mới sau: <span id="countdown">10</span>s
+        </div>
     </div>
+
     <script>
         const params = new URLSearchParams(window.location.search);
         const hwid = params.get('hwid');
-        document.getElementById('hwid-show').innerText = hwid || "MISSING";
 
-        async function init() {
-            if(!hwid) { document.getElementById('key-display').innerText = "VÀO BẰNG SCRIPT!"; return; }
+        async function fetchNewKey() {
+            if(!hwid) {
+                document.getElementById('key-display').innerText = "VÀO TỪ SCRIPT!";
+                return;
+            }
+
             try {
-                const res = await fetch(`/api/verify?hwid=${hwid}&t=${Date.now()}`);
+                // Thêm RAND để phá mọi loại Cache của trình duyệt
+                const rand = Math.random();
+                const res = await fetch(`/api/verify?hwid=${hwid}&update=${rand}`);
                 const data = await res.json();
+
                 document.getElementById('key-display').innerText = data.key;
                 
-                let t = data.ttl;
+                let timeLeft = data.ttl;
                 const cd = document.getElementById('countdown');
-                const timer = setInterval(() => {
-                    t--; cd.innerText = t;
-                    if(t <= 0) {
-                        clearInterval(timer);
-                        window.location.reload(); // TỰ RESET TRANG WEB
+
+                const loop = setInterval(() => {
+                    timeLeft--;
+                    if(timeLeft < 0) timeLeft = 0;
+                    cd.innerText = timeLeft;
+
+                    if(timeLeft <= 0) {
+                        clearInterval(loop);
+                        // RESET TOÀN TRANG ĐỂ LẤY MÃ MỚI
+                        window.location.reload();
                     }
                 }, 1000);
-            } catch(e) { console.log(e); }
+
+            } catch(e) {
+                document.getElementById('key-display').innerText = "LỖI KẾT NỐI";
+            }
         }
-        init();
-        function copyKey() { 
-            navigator.clipboard.writeText(document.getElementById('key-display').innerText); 
-            alert("Đã Copy Key!"); 
+
+        fetchNewKey();
+
+        function copyKey() {
+            const k = document.getElementById('key-display').innerText;
+            navigator.clipboard.writeText(k);
+            alert("Đã Copy Key Mới!");
         }
     </script>
 </body>
