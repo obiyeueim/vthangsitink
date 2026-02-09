@@ -1,40 +1,50 @@
 const crypto = require('crypto');
 
 module.exports = async (req, res) => {
-    // 1. CẤU HÌNH CƠ BẢN
+    // 1. Tối ưu Header để phản hồi nhanh nhất
     res.setHeader('Cache-Control', 's-maxage=0, no-store, no-cache');
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Cho phép Roblox gọi
+    res.setHeader('Access-Control-Allow-Origin', '*'); 
     
-    const secret = "BANANA_SECRET_VIP_2024"; 
-    const link4mToken = "67a2da1f15c56943e24cb1ce"; // API LINK4M CỦA ÔNG
-    
+    // CẤU HÌNH
+    const secret = "BANANA_SECRET_VIP_2025"; 
+    const link4mToken = "67a2da1f15c56943e24cb1ce"; // API Key của bạn
+    const myDomain = "https://key-system-banana-hub.vercel.app"; // Domain Vercel của bạn
+
     const { key, hwid, shorten } = req.query;
 
     if (!hwid) return res.status(400).json({ error: "MISSING_HWID" });
 
-    // 2. CHỨC NĂNG RÚT GỌN LINK (MÁY IN TIỀN)
-    // Nếu Script hoặc Web gửi yêu cầu ?shorten=true
+    // 2. XỬ LÝ RÚT GỌN LINK (FIX LỖI CHẬM)
     if (shorten) {
-        const longUrl = `https://${req.headers.host}/?hwid=${hwid}`;
+        // Link đích cần rút gọn (Vercel kèm HWID)
+        const destinationUrl = `${myDomain}/?hwid=${hwid}`;
+        
         try {
-            // Gọi sang Link4M để rút gọn
-            const response = await fetch(`https://link4m.com/api?api=${link4mToken}&url=${encodeURIComponent(longUrl)}`);
+            // GỌI ĐÚNG LINK API V2 TỪ HÌNH ẢNH CUNG CẤP
+            const apiUrl = `https://link4m.co/api-shorten/v2?api=${link4mToken}&url=${encodeURIComponent(destinationUrl)}`;
+            
+            const response = await fetch(apiUrl);
             const data = await response.json();
             
-            if (data.status === "success" || data.shortenedUrl) {
+            if (data.status === "success" && data.shortenedUrl) {
                 return res.status(200).json({ 
                     status: "success", 
                     url: data.shortenedUrl 
                 });
             } else {
-                return res.status(500).json({ error: "LINK4M_FAIL", detail: data });
+                // Nếu lỗi, trả về link gốc để không làm gián đoạn người dùng
+                return res.status(200).json({ 
+                    status: "error", 
+                    url: destinationUrl,
+                    message: "Link4M API Error"
+                });
             }
         } catch (e) {
             return res.status(500).json({ error: "SERVER_ERROR" });
         }
     }
 
-    // 3. THUẬT TOÁN TẠO KEY (MD5 - 10 GIÂY)
+    // 3. THUẬT TOÁN KEY (MD5 - 10 GIÂY)
     const timeStep = Math.floor(Date.now() / 10000); 
     
     const generateKey = (step) => {
@@ -45,7 +55,7 @@ module.exports = async (req, res) => {
 
     const currentKey = generateKey(timeStep);
     
-    // Trả về Key cho Web hiển thị
+    // Trả về Key
     if (!key) {
         return res.status(200).json({ 
             key: currentKey, 
@@ -53,7 +63,7 @@ module.exports = async (req, res) => {
         });
     }
 
-    // Kiểm tra Key (Cho phép độ trễ 1 chu kỳ để tránh lag mạng)
+    // Check Key
     if (key === currentKey || key === generateKey(timeStep - 1)) {
         return res.status(200).json({ status: "success" });
     } else {
