@@ -2,89 +2,247 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BANANA HUB KEY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BANANA HUB - CARTOON EDITION</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        body { margin:0; background:#0a0a0a; color:#FFE135; font-family: sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
-        .box { background:#111; padding:40px; border:3px solid #FFE135; border-radius:20px; text-align:center; width:350px; box-shadow:0 0 50px rgba(255, 225, 53, 0.2); }
-        .key { font-size:26px; font-weight:bold; color:#fff; background:#000; padding:20px; margin:20px 0; border-radius:10px; border:2px dashed #FFE135; letter-spacing: 2px; }
-        button { background:#FFE135; border:none; padding:15px; width:100%; font-weight:900; cursor:pointer; border-radius:10px; font-size:16px; margin-top: 10px; }
-        .loader { border: 4px solid #333; border-top: 4px solid #FFE135; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index:999; }
+        /* CÀI ĐẶT CHUNG */
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            /* Nền gradient vàng cam tươi sáng */
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            font-family: 'Fredoka', sans-serif; /* Font hoạt hình */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* HỘP CHỨA CHÍNH (KIỂU VỎ CHUỐI) */
+        .main-card {
+            background: #FFFBEA; /* Màu kem sáng */
+            width: 100%;
+            max-width: 380px;
+            padding: 30px;
+            border-radius: 30px;
+            /* Viền màu nâu đậm kiểu đầu quả chuối */
+            border: 5px solid #5C4033;
+            text-align: center;
+            /* Bóng đổ tạo chiều sâu 3D */
+            box-shadow: 0 15px 0 #C7A300, 0 25px 30px rgba(0,0,0,0.2);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .main-card:hover { transform: translateY(-5px); }
+
+        /* ẢNH MEME ĐỘNG */
+        .meme-gif {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid #FFD700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: -60px; /* Nhô lên khỏi hộp */
+            background: #fff;
+        }
+
+        h2 {
+            margin: 15px 0 5px;
+            color: #5C4033;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 #FFD700;
+        }
+
+        /* THẺ HWID */
+        .hwid-badge {
+            display: inline-block;
+            background: #FFD700;
+            color: #5C4033;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        /* KHUNG HIỂN THỊ KEY */
+        .key-box-container {
+            background: #2a2a2a;
+            padding: 5px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+        }
+        .key {
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            color: #FFD700;
+            background: #111;
+            padding: 15px;
+            border: 3px dashed #FFD700;
+            border-radius: 12px;
+            word-break: break-all;
+        }
+
+        /* NÚT BẤM 3D */
+        .btn-copy {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            background: #FFD700;
+            color: #5C4033;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            /* Hiệu ứng nút nổi 3D */
+            box-shadow: 0 6px 0 #C7A300;
+            transition: all 0.1s;
+            position: relative;
+            top: 0;
+        }
+        .btn-copy:active {
+            top: 6px;
+            box-shadow: 0 0 0 #C7A300;
+        }
+
+        /* THANH ĐẾM NGƯỢC */
+        .timer-container { margin-top: 20px; }
+        .progress-bg {
+            height: 12px;
+            background: #E0E0E0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 8px;
+            border: 2px solid #5C4033;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #FF4444, #FFD700);
+            width: 100%;
+            transition: width 1s linear;
+        }
+        .timer-text { font-size: 14px; color: #5C4033; font-weight: bold; }
+        #countdown { color: #FF4444; font-size: 18px; }
+
+        /* MÀN HÌNH CHỜ CHUYỂN HƯỚNG */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(92, 64, 51, 0.95); /* Nâu tối */
+            display: none;
+            justify-content: center; align-items: center; flex-direction: column;
+            z-index: 999; color: #FFD700;
+        }
+        .banana-loader {
+            font-size: 50px;
+            animation: spin 1s infinite linear;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2 style="margin:0;">🍌 BANANA HUB</h2>
-        <div style="font-size:11px; color:#555;">HWID: <span id="hwid-show">...</span></div>
-        <div id="key-display" class="key">LOADING...</div>
-        <button onclick="copyKey()">COPY KEY</button>
-        <div style="margin-top:15px; color:#888;">Key hết hạn sau: <span id="countdown" style="color:red; font-weight:bold;">10</span>s</div>
+    <div class="main-card">
+        <img src="https://media.tenor.com/2Xy40aH9yG4AAAAi/banana-cat-crying.gif" class="meme-gif" alt="Banana Cat">
+        <h2>🍌 BANANA HUB</h2>
+        <div class="hwid-badge">HWID: <span id="hwid-show">Checking...</span></div>
+
+        <div class="key-box-container">
+            <div id="key-display" class="key">LOADING...</div>
+        </div>
+
+        <button class="btn-copy" onclick="copyKey()">COPY KEY NGAY!</button>
+
+        <div class="timer-container">
+            <div class="progress-bg">
+                <div class="progress-bar" id="progress"></div>
+            </div>
+            <div class="timer-text">Key hết hạn sau: <span id="countdown">10</span>s</div>
+        </div>
     </div>
 
     <div class="overlay" id="redirect-screen">
-        <div class="loader"></div>
-        <h3 style="color:#fff;">HẾT GIỜ!</h3>
-        <p style="color:#aaa;">Đang tạo link Link4M mới...</p>
+        <div class="banana-loader">🍌</div>
+        <h3>HẾT GIỜ RỒI!</h3>
+        <p>Đang tạo link mới...</p>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const hwid = params.get('hwid');
-        document.getElementById('hwid-show').innerText = hwid || "MISSING";
+        document.getElementById('hwid-show').innerText = hwid ? hwid.substring(0, 15) + "..." : "MISSING";
 
         async function init() {
             if(!hwid) {
                 document.getElementById('key-display').innerText = "VÀO TỪ GAME!";
-                document.getElementById('key-display').style.fontSize = "18px";
+                document.getElementById('key-display').style.color = "#FF4444";
                 return;
             }
 
             try {
-                // 1. Lấy Key
+                // 1. Lấy Key từ Vercel
                 const res = await fetch(`/api/verify?hwid=${hwid}&nocache=${Date.now()}`);
                 const data = await res.json();
                 document.getElementById('key-display').innerText = data.key;
                 
-                // 2. Đếm ngược
-                let timeLeft = data.ttl || 10;
-                const cd = document.getElementById('countdown');
+                // 2. Xử lý đếm ngược và thanh tiến trình
+                let maxTime = 10;
+                let timeLeft = data.ttl || maxTime;
+                
+                const cdLabel = document.getElementById('countdown');
+                const progressBar = document.getElementById('progress');
 
                 const timer = setInterval(() => {
                     timeLeft--;
-                    cd.innerText = timeLeft;
+                    cdLabel.innerText = timeLeft;
+                    
+                    // Cập nhật độ dài thanh tiến trình
+                    const percentage = (timeLeft / maxTime) * 100;
+                    progressBar.style.width = percentage + "%";
+
                     if(timeLeft <= 0) {
                         clearInterval(timer);
-                        getLink4M(); // Hết giờ -> Gọi hàm lấy link mới
+                        progressBar.style.width = "0%";
+                        getLink4M(); // Hết giờ -> Đá sang Link4M
                     }
                 }, 1000);
 
-            } catch(e) { console.log(e); }
+            } catch(e) {
+                document.getElementById('key-display').innerText = "LỖI MẠNG";
+            }
         }
 
         async function getLink4M() {
             document.getElementById('redirect-screen').style.display = 'flex';
             try {
-                // Gọi API lấy link Link4M
+                // Gọi API lấy link rút gọn
                 const res = await fetch(`/api/verify?hwid=${hwid}&shorten=true&nocache=${Date.now()}`);
                 const data = await res.json();
                 
                 if(data.status === "success" && data.url) {
-                    window.location.href = data.url; // Chuyển hướng ngay lập tức
+                    window.location.href = data.url; 
                 } else {
-                    alert("Lỗi tạo link! Vui lòng F5.");
-                    location.reload();
+                    // Fallback nếu lỗi
+                    window.location.href = data.url || window.location.href;
                 }
             } catch(e) {
-                alert("Mất kết nối!");
+                location.reload();
             }
         }
 
         init();
+        
         function copyKey() {
-            navigator.clipboard.writeText(document.getElementById('key-display').innerText);
-            alert("Đã Copy Key!");
+            const keyText = document.getElementById('key-display').innerText;
+            if(keyText.includes("...") || keyText.includes("LỖI")) return;
+            navigator.clipboard.writeText(keyText);
+            const btn = document.querySelector('.btn-copy');
+            btn.innerText = "ĐÃ COPY! 🍌";
+            setTimeout(() => btn.innerText = "COPY KEY NGAY!", 2000);
         }
     </script>
 </body>
