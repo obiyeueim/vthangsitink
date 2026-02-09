@@ -3,75 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BANANA HUB - KEY REGENERATOR</title>
+    <title>BANANA KEY SYSTEM</title>
     <style>
-        body { margin:0; background:#0a0a0a; color:#FFE135; font-family: 'Segoe UI', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
-        .box { background:#111; padding:40px; border:3px solid #FFE135; border-radius:25px; text-align:center; width:360px; box-shadow:0 0 40px rgba(255,225,53,0.2); }
-        .key { font-size:28px; font-weight:bold; color:#fff; background:#000; padding:20px; margin:20px 0; border-radius:15px; border:2px dashed #FFE135; letter-spacing: 2px; }
-        button { background:#FFE135; border:none; padding:15px; width:100%; font-weight:900; cursor:pointer; border-radius:12px; font-size:16px; transition: 0.3s; }
-        button:hover { background:#fff; transform: scale(1.02); }
-        .timer { margin-top:20px; font-size:14px; color:#666; }
-        #countdown { color:#ff4444; font-weight:bold; }
+        body { margin:0; background:#0a0a0a; color:#FFE135; font-family: sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; }
+        .box { background:#111; padding:40px; border:3px solid #FFE135; border-radius:20px; text-align:center; width:350px; box-shadow:0 0 50px rgba(255, 225, 53, 0.2); }
+        .key { font-size:26px; font-weight:bold; color:#fff; background:#000; padding:20px; margin:20px 0; border-radius:10px; border:2px dashed #FFE135; letter-spacing: 2px; }
+        button { background:#FFE135; border:none; padding:15px; width:100%; font-weight:900; cursor:pointer; border-radius:10px; font-size:16px; margin-top: 10px; }
+        button:hover { background:#fff; }
+        .timer { margin-top:15px; font-size:14px; color:#888; }
+        #countdown { color:#ff4444; font-weight:bold; font-size:18px; }
+        
+        .overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index:999; }
+        .loader { border: 5px solid #333; border-top: 5px solid #FFE135; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2 style="margin:0;">🍌 BANANA CAT</h2>
-        <p style="font-size:10px; color:#444;">DEVICE SECURED SYSTEM</p>
+        <h2 style="margin:0;">🍌 BANANA HUB</h2>
+        <div style="font-size:11px; color:#555;">HWID: <span id="hwid-show">...</span></div>
         
         <div id="key-display" class="key">LOADING...</div>
-        
         <button onclick="copyKey()">COPY KEY</button>
-        
-        <div class="timer">
-            Hệ thống sẽ Reset mã mới sau: <span id="countdown">10</span>s
-        </div>
+        <div class="timer">Key hết hạn sau: <span id="countdown">10</span>s</div>
+    </div>
+
+    <div class="overlay" id="loading-screen">
+        <div class="loader"></div>
+        <h3 style="color:#fff;">KEY ĐÃ HẾT HẠN!</h3>
+        <p style="color:#aaa;">Đang tạo link Link4M mới...</p>
     </div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
         const hwid = params.get('hwid');
+        document.getElementById('hwid-show').innerText = hwid || "UNKNOWN";
 
-        async function fetchNewKey() {
+        async function init() {
             if(!hwid) {
                 document.getElementById('key-display').innerText = "VÀO TỪ SCRIPT!";
+                document.getElementById('key-display').style.fontSize = "16px";
                 return;
             }
 
             try {
-                // Thêm RAND để phá mọi loại Cache của trình duyệt
-                const rand = Math.random();
-                const res = await fetch(`/api/verify?hwid=${hwid}&update=${rand}`);
+                // 1. Lấy Key
+                const res = await fetch(`/api/verify?hwid=${hwid}&nocache=${Date.now()}`);
                 const data = await res.json();
-
                 document.getElementById('key-display').innerText = data.key;
                 
-                let timeLeft = data.ttl;
+                // 2. Đếm ngược
+                let timeLeft = data.ttl || 10;
                 const cd = document.getElementById('countdown');
 
-                const loop = setInterval(() => {
+                const timer = setInterval(() => {
                     timeLeft--;
-                    if(timeLeft < 0) timeLeft = 0;
                     cd.innerText = timeLeft;
 
                     if(timeLeft <= 0) {
-                        clearInterval(loop);
-                        // RESET TOÀN TRANG ĐỂ LẤY MÃ MỚI
-                        window.location.reload();
+                        clearInterval(timer);
+                        forceRedirect(); // HẾT GIỜ -> ĐÁ RA LINK4M
                     }
                 }, 1000);
 
+            } catch(e) { console.log(e); }
+        }
+
+        async function forceRedirect() {
+            // Hiện màn hình chờ
+            document.getElementById('loading-screen').style.display = 'flex';
+            
+            try {
+                // Gọi Server để lấy Link4M mới
+                const res = await fetch(`/api/verify?hwid=${hwid}&shorten=true&nocache=${Date.now()}`);
+                const data = await res.json();
+                
+                if(data.status === "success" && data.url) {
+                    // CHUYỂN HƯỚNG NGƯỜI DÙNG
+                    window.location.href = data.url; 
+                } else {
+                    alert("Lỗi tạo link! Vui lòng F5.");
+                }
             } catch(e) {
-                document.getElementById('key-display').innerText = "LỖI KẾT NỐI";
+                alert("Mất kết nối Server!");
             }
         }
 
-        fetchNewKey();
-
+        init();
         function copyKey() {
-            const k = document.getElementById('key-display').innerText;
-            navigator.clipboard.writeText(k);
-            alert("Đã Copy Key Mới!");
+            navigator.clipboard.writeText(document.getElementById('key-display').innerText);
+            alert("Đã Copy Key!");
         }
     </script>
 </body>
