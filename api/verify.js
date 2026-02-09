@@ -1,69 +1,59 @@
+// Sử dụng thư viện có sẵn của Node.js để tránh lỗi
 const crypto = require('crypto');
 
 module.exports = async (req, res) => {
-    // 1. CẤU HÌNH CƠ BẢN
+    // 1. Cấu hình Header chuẩn để phản hồi cực nhanh
     res.setHeader('Cache-Control', 's-maxage=0, no-store, no-cache');
     res.setHeader('Access-Control-Allow-Origin', '*'); 
 
+    // === CẤU HÌNH CỦA BẠN ===
     const secret = "BANANA_SECRET_VIP_2025"; 
-    const link4mToken = "67a2da1f15c56943e24cb1ce"; // API Key chuẩn của bạn
+    const link4mToken = "67a2da1f15c56943e24cb1ce"; // API Key Link4M của bạn
     
-    // Tự động lấy domain hiện tại (để không phải sửa code nhiều)
+    // Tự động lấy domain hiện tại
     const host = req.headers.host; 
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const myDomain = `${protocol}://${host}`;
 
     const { key, hwid, shorten } = req.query;
 
+    // Nếu không có HWID thì chặn luôn
     if (!hwid) return res.status(400).json({ error: "MISSING_HWID" });
 
-    // 2. CHỨC NĂNG RÚT GỌN LINK (ĐÃ FIX CHẶN BOT)
+    // 2. CHỨC NĂNG RÚT GỌN LINK (Link4M V2 - Fix lỗi chậm)
     if (shorten) {
         const destinationUrl = `${myDomain}/?hwid=${hwid}`;
         
         try {
-            // URL API V2 chuẩn từ ảnh bạn gửi
+            // URL API V2 chuẩn từ tài liệu Link4M
             const apiUrl = `https://link4m.co/api-shorten/v2?api=${link4mToken}&url=${encodeURIComponent(destinationUrl)}`;
             
-            // THÊM HEADER GIẢ LẬP TRÌNH DUYỆT (QUAN TRỌNG NHẤT)
+            // Giả lập trình duyệt để không bị chặn
             const response = await fetch(apiUrl, {
                 method: 'GET',
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36'
                 }
             });
 
-            const textData = await response.text(); // Lấy text trước để debug nếu lỗi
+            const data = await response.json();
             
-            try {
-                const data = JSON.parse(textData);
-                
-                // Kiểm tra kết quả theo đúng tài liệu ảnh
-                if (data.status === "success" && data.shortenedUrl) {
-                    return res.status(200).json({ 
-                        status: "success", 
-                        url: data.shortenedUrl 
-                    });
-                } else {
-                    // Link4M báo lỗi -> Trả về link gốc (Dự phòng)
-                    console.log("Link4M Error:", data);
-                    return res.status(200).json({ 
-                        status: "fallback", 
-                        url: destinationUrl, 
-                        message: "Link4M API Error" 
-                    });
-                }
-            } catch (jsonError) {
-                // Không phải JSON (có thể là HTML lỗi của Cloudflare)
+            // Kiểm tra kết quả trả về từ Link4M
+            if (data.status === "success" && data.shortenedUrl) {
+                return res.status(200).json({ 
+                    status: "success", 
+                    url: data.shortenedUrl 
+                });
+            } else {
+                // Link4M lỗi -> Trả về link gốc để dùng tạm (Không báo lỗi server nữa)
                 return res.status(200).json({ 
                     status: "fallback", 
                     url: destinationUrl,
-                    message: "Cloudflare Blocked"
+                    message: "Link4M API Fail"
                 });
             }
-
         } catch (e) {
-            // Lỗi mạng Vercel -> Trả về link gốc
+            // Lỗi mạng -> Trả về link gốc dùng tạm
             return res.status(200).json({ 
                 status: "fallback", 
                 url: destinationUrl,
@@ -72,7 +62,7 @@ module.exports = async (req, res) => {
         }
     }
 
-    // 3. TẠO KEY (GIỮ NGUYÊN)
+    // 3. THUẬT TOÁN TẠO KEY (MD5 - 10 GIÂY)
     const timeStep = Math.floor(Date.now() / 10000); 
     const generateKey = (step) => {
         const raw = step + secret + hwid;
@@ -82,6 +72,7 @@ module.exports = async (req, res) => {
 
     const currentKey = generateKey(timeStep);
 
+    // Trả về Key (cho Web hiển thị)
     if (!key) {
         return res.status(200).json({ 
             key: currentKey, 
@@ -89,6 +80,7 @@ module.exports = async (req, res) => {
         });
     }
 
+    // Kiểm tra Key (cho Script check)
     if (key === currentKey || key === generateKey(timeStep - 1)) {
         return res.status(200).json({ status: "success" });
     } else {
