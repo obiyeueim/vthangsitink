@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BANANA HUB NETLIFY</title>
+    <style>
+        body { margin:0; background:#111; color:#FFE135; font-family: sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
+        .box { background:#000; padding:30px; border:2px solid #FFE135; border-radius:15px; text-align:center; width:350px; }
+        .key { font-size:24px; font-weight:bold; color:#fff; background:#222; padding:15px; margin:20px 0; border-radius:10px; border:1px dashed #FFE135; }
+        button { background:#FFE135; border:none; padding:15px; width:100%; font-weight:bold; font-size:16px; cursor:pointer; border-radius:8px; }
+        button:hover { background:#fff; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>🍌 BANANA NETLIFY</h2>
+        <div style="font-size: 11px; color: #888;">HWID: <span id="hwid-show">...</span></div>
+        <div id="key-display" class="key">WAITING...</div>
+        <button onclick="copyKey()">COPY KEY</button>
+        <div style="margin-top:10px; color:#666;">Reset in: <span id="time">10</span>s</div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const hwid = params.get('hwid');
+        document.getElementById('hwid-show').innerText = hwid || "MISSING";
+
+        async function getKey() {
+            if(!hwid) {
+                document.getElementById('key-display').innerText = "VÀO BẰNG SCRIPT!";
+                return;
+            }
+            try {
+                // GỌI ĐÚNG ĐƯỜNG DẪN NETLIFY
+                const res = await fetch(`/.netlify/functions/verify?hwid=${hwid}&nocache=${Date.now()}`);
+                const data = await res.json();
+
+                if(data.error) document.getElementById('key-display').innerText = "LỖI HWID";
+                else {
+                    document.getElementById('key-display').innerText = data.key;
+                    let t = data.ttl;
+                    if(window.cd) clearInterval(window.cd);
+                    window.cd = setInterval(() => {
+                        t--; document.getElementById('time').innerText = t;
+                        if(t<=0) getKey();
+                    }, 1000);
+                }
+            } catch(e) { console.log(e); }
+        }
+        getKey();
+        function copyKey() { navigator.clipboard.writeText(document.getElementById('key-display').innerText); alert("Copied!"); }
+    </script>
+</body>
+</html>
